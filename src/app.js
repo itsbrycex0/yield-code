@@ -6,21 +6,32 @@
 
 // module vars
 require('dotenv').config();
-const Express = require('express');
-const BodyParser = require('body-parser');
+const express = require('express');
+const bodyParser = require('body-parser');
+const fs = require('fs');
+const path = require('path');
 
 // ours module
 const db = require('./database.js').get();
-console.log('Connected to database');
-
-db.exec(`
-    INSERT INTO users (username, password, discord_id) VALUES ('frame', 'frame', '123456789')
-`);
+console.log('The database is connected with you!');
 
 // vars
 // setup express
-const app = Express();
+const app = express();
 
 // extends express
-app.use(BodyParser.json());
-app.use(BodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
+// setup routes
+let routeFiles = fs.readdirSync(path.join(__dirname, 'routes'));
+for(const index in routeFiles) {
+    let currentRoutePath = routeFiles[index];
+    require(`./routes/${currentRoutePath}`)(app);
+}
+
+// close database. Setup others
+db.close();
+app.listen(process.env.PORT || 3000, () => {
+    console.log(`[YieldCode] Running your web application at port ${process.env.PORT || 3000}`);
+});
